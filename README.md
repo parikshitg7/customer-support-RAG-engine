@@ -1,5 +1,10 @@
 # Customer Support RAG Engine
 
+
+[![Live Demo](https://img.shields.io/badge/Demo-Live%20On%20Streamlit-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)]([YOUR_STREAMLIT_URL_HERE](https://pdf-rag-engine.streamlit.app/))
+
+### [ Click Here to Try the Live App](https://pdf-rag-engine.streamlit.app/)
+
 A lightweight, efficient, and cost-effective **Retrieval-Augmented Generation (RAG)** engine built to perform semantic search and factual question-answering over local documents. This pipeline uses an open-source local embedding model to convert text into mathematical vectors, stores them in an offline vector database, and leverages **Groq's ultra-fast inference infrastructure** to generate grounded, hallucination-resistant answers.
 
 ---

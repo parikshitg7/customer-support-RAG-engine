@@ -5,7 +5,7 @@ def chunk_document():
     print("--- Starting Phase 2: Chunking ---")
     
     # 1. Load the document (Phase 1 logic)
-    loader = PyPDFLoader("sample.pdf")
+    loader = PyPDFLoader("Software_Engineering_Complete_Notes.pdf")
     pages = loader.load()
     
     # 2. Initialize the Text Splitter
@@ -25,14 +25,13 @@ def chunk_document():
     print(f"Total chunks created: {len(chunks)}")
     
     # Let's look closely at Chunk 0 and Chunk 1 to see the overlap
-    if len(chunks) > 1:
-        print("\n=== CHUNK 0 ===")
-        print(chunks[0].page_content)
-        print(f"Metadata: {chunks[0].metadata}")
-        
+    # Let's look closely at Chunk 1 and Chunk 2 to see the overlap
+    if len(chunks) > 2:
         print("\n=== CHUNK 1 ===")
         print(chunks[1].page_content)
-        print(f"Metadata: {chunks[1].metadata}")
+        
+        print("\n=== CHUNK 2 ===")
+        print(chunks[2].page_content)
 
 if __name__ == "__main__":
     chunk_document()

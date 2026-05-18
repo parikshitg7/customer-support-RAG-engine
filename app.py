@@ -1,6 +1,6 @@
 import os
 import tempfile
-import uuid  # NEW: Generates unique IDs for database isolation
+import uuid
 import streamlit as st
 from dotenv import load_dotenv
 
@@ -9,6 +9,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq 
+
+# Updated imports to langchain_classic to fix the ModuleNotFoundError
 from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -23,15 +25,28 @@ if not os.getenv("GROQ_API_KEY"):
     st.error("Missing GROQ_API_KEY. Please add it to your secrets or .env file.")
     st.stop()
 
-# 2. Sidebar for File Upload
+# 2. Sidebar for File Upload & Garbage Collection
 with st.sidebar:
     st.header("📄 Document Upload")
     uploaded_file = st.file_uploader("Upload your PDF here", type=["pdf"])
+    
+    # NEW: The "Shredder" button to prevent memory leaks and reset the app
+    if st.button("🗑️ Clear Data & Start Over"):
+        # Explicitly delete the Chroma bucket from the server's RAM
+        if "vector_db" in st.session_state:
+            st.session_state.vector_db.delete_collection()
+            
+        # Wipe the user's browser session clean
+        st.session_state.clear()
+        
+        # Refresh the page
+        st.rerun()
+
     st.markdown("---")
     st.markdown("### How it works:")
     st.markdown("1. Upload a PDF.\n2. The system reads and chunks the text.\n3. It builds a temporary Vector Database.\n4. You can ask questions!")
 
-# 3. Process the Uploaded PDF (REMOVED @st.cache_resource)
+# 3. Process the Uploaded PDF securely
 def process_document(file_to_process):
     with st.spinner("Reading, chunking, and embedding document... This takes a few seconds."):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
@@ -45,15 +60,17 @@ def process_document(file_to_process):
 
         embedding_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         
-        # FIX 1: Generate a unique ID for this specific upload
+        # Generate a unique ID to ensure buckets never mix between users
         session_id = str(uuid.uuid4())
         
-        # FIX 2: Assign the unique ID as the collection_name so data never mixes
         vector_db = Chroma.from_documents(
             documents=chunks, 
             embedding=embedding_model,
             collection_name=session_id
         )
+        
+        # Save the database reference so the Clear Data button can find and delete it
+        st.session_state.vector_db = vector_db
 
         llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
         
@@ -80,7 +97,7 @@ def process_document(file_to_process):
 # 4. Chat Interface Logic
 if uploaded_file is not None:
     
-    # FIX 3: Store the database in the user's private session_state instead of global cache
+    # Store the database in the user's private session_state
     if "processed_file_id" not in st.session_state or st.session_state.processed_file_id != uploaded_file.file_id:
         st.session_state.rag_chain = process_document(uploaded_file)
         st.session_state.processed_file_id = uploaded_file.file_id
@@ -96,7 +113,6 @@ if uploaded_file is not None:
         st.chat_message("user").write(user_input)
         
         with st.spinner("Searching document..."):
-            # Use the private rag_chain stored in session_state
             response = st.session_state.rag_chain.invoke({"input": user_input})
             answer = response["answer"]
             

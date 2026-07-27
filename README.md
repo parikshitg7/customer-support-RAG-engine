@@ -236,7 +236,7 @@ Final Answer
 
 ---
 
-## 🔒 Privacy Notes
+##  Privacy Notes
 
 This project keeps document processing local:
 
@@ -262,6 +262,6 @@ Only the final retrieved context is sent to Groq for answer generation.
 
 ---
 
-## 📄 License
+##  License
 
 This project is built for educational and portfolio purposes.
